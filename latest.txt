@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PRODUCTION</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: sans-serif;
+        font-family: "Kanit", sans-serif;
+        background-color: #f3f8ff;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.4);
+        padding-top: 5px;
+      }
+
+      .modal-content {
+        background-color: white;
+        margin: 15% auto;
+        /* Margin from top and centered */
+        padding: 20px;
+        border: 1px solid #888;
+        width: 300px;
+        /* Modal size */
+        position: relative;
+      }
+
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .close:hover,
+      .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 0px auto;
+        padding: 10px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        color: black;
+        border-radius: 2rem;
+        padding: 2rem;
+      }
+
+      /* Table styles */
+      table {
+        width: 80%;
+        /* Set table width */
+        margin: 20px auto;
+        /* Center the table */
+        border-collapse: collapse;
+        /* Remove space between table cells */
+        text-align: center;
+        /* Center text */
+      }
+
+      th,
+      td {
+        border: 1px solid #ddd;
+        /* Add border to table cells */
+        padding: 8px;
+        
+        /* Cell padding */
+      }
+
+      th {
+        background-color: rgb(33, 83, 163);
+        color:white;
+      }
+
+      tbody tr:hover {
+        background-color: #e8f3fc;
+        /* Change background on hover */
+      }
+
+      h1 {
+        font-size: 3.8rem;
+        color: #012d66;
+        -webkit-text-stroke: 2px rgb(177, 188, 218);
+        text-shadow: 4px 4px 8px rgb(120, 154, 170);
+        /* เพิ่มเงา */
+        margin: 0;
+        text-align: center;
+      }
+
+      #filterDepartment,
+      #filterLine,
+      #filterDate {
+        margin-right: 25px;
+      }
+
+      .filter {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        gap: 30px;
+      }
+
+      button {
+        font-family: "Kanit", sans-serif;
+        background-color: #1270c7;
+        color: white;
+        padding: 14px 13px;
+        margin: 0px 5px;
+        border: none;
+        cursor: pointer;
+        border-radius: 0.7rem;
+      }
+
+      button:hover {
+        opacity: 0.9;
+        transform: scale(1.1);
+        transition: 0.2s;
+      }
+
+      .button-container {
+        display: flex;
+        justify-content: flex-end; 
+        margin-right: 250px;
+  
+      }
+
+    </style>
+  </head>
+
+  <h1>PRODUCTION</h1>
+
+  <body>
+    <div class="button-container">
+      <button class="addRowButton" id="addRowButton">เพิ่มแผน</button>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeModal">&times;</span>
+        <form id="userForm">
+          <label for="department">แผนก:</label>
+          <select
+            id="department"
+            name="department"
+            onchange="updateModalLineDropdown()"
+          >
+            <option value="ปิดผิว">ปิดผิว (LM)</option>
+            <option value="พีพีบอร์ด">พีพีบอร์ด (PPB)</option>
+            <option value="รีดเหล็ก">รีดเหล็ก (FM)</option>
+            <option value="พิมพ์เยื่อ">พิมพ์เยื่อ (TLP)</option>
+            <option value="เฟรม">เฟรม (WP)</option>
+            <option value="ตัดแผ่น">ตัดแผ่น (PPBC)</option>
+          </select>
+          <br /><br />
+
+          <label for="line">ไลน์:</label>
+          <select id="line" name="line">
+            <option value="L1">L1</option>
+            <option value="L2">L2</option>
+            <option value="L3">L3</option>
+          </select>
+          <br /><br />
+
+          <label for="orderNumber">เลขที่ใบสั่งผลิต:</label>
+          <input type="text" id="orderNumber" placeholder="" />
+          <br /><br />
+
+          <label for="productCode">รหัสสินค้า:</label>
+          <input type="text" id="productCode" placeholder="" />
+          <br /><br />
+
+          <label for="productName">ชื่อสินค้า:</label>
+          <input type="text" id="productName" placeholder="" />
+          <br /><br />
+
+          <label for="productUnit">หน่วย:</label>
+          <input type="text" id="productUnit" placeholder="" />
+          <br /><br />
+
+          <label for="productQuantity">จำนวนที่สั่งผลิต:</label>
+          <input type="text" id="productQuantity" placeholder="" />
+          <br /><br />
+
+          <label for="requestedDate">วันที่ต้องการสินค้า:</label>
+          <input type="date" id="requestedDate" placeholder="" />
+          <br /><br />
+
+          <label for="productionDate">วันที่ผลิตสินค้า:</label>
+          <input type="date" id="productionDate" placeholder="" />
+          <br /><br />
+
+          <label for="finishDate">วันที่ผลิตเสร็จสิ้น:</label>
+          <input type="date" id="finishDate" placeholder="" />
+          <br /><br />
+
+          <label for="productionStatus">สถานะการผลิต:</label>
+          <select id="productionStatus" name="productionStatus">
+            <option value="ลงแผนผลิต">ลงแผนผลิต</option>
+            <option value="กำลังผลิต">กำลังผลิต</option>
+            <option value="ผลิตเสร็จสิ้น">ผลิตเสร็จสิ้น</option>
+            <option value="รอการตรวจสอบ">รอการตรวจสอบ</option>
+            <option value="ไม่ผ่านการตรวจสอบ">ไม่ผ่านการตรวจสอบ</option>
+            <option value="ผ่านการตรวจสอบ">ผ่านการตรวจสอบ</option>
+            <option value="รอการรับเข้า">รอการรับเข้า</option>
+            <option value="สินค้าถูกตีกลับ">สินค้าถูกตีกลับ</option>
+            <option value="รับเข้าเสร็จสิ้น">รับเข้าเสร็จสิ้น</option>
+          </select>
+          <br /><br />
+
+          <label for="recordDate">วันที่บันทึก:</label>
+          <input type="date" id="recordDate" placeholder="" />
+          &nbsp;&nbsp;
+
+          <label for="productionTime">เวลา:</label>
+          <input type="time" id="productionTime" placeholder="" />
+          <br /><br />
+
+          <button type="submit">บันทึก</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- User Data Table -->
+    <table>
+      <thead>
+        <tr>
+          <th>ลำดับ</th>
+          <th>แผนก</th>
+          <th>ไลน์</th>
+          <th>เลขที่ใบสั่งผลิต</th>
+          <th>รหัสสินค้า</th>
+          <th>ชื่อสินค้า</th>
+          <th>หน่วย</th>
+          <th>จำนวนที่สั่งผลิต</th>
+          <th>วันที่ต้องการสินค้า</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeHistoryModal">&times;</span>
+        <h3>History</h3>
+        <div id="historyDetails"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      // Firebase setup
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        getDocs,
+        deleteDoc,
+        updateDoc,
+        doc,
+        arrayUnion,
+        getDoc,
+        query,
+        orderBy,
+      } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+      // Firebase config
+      const firebaseConfig = {
+        apiKey: "AIzaSyD9KJDhRxH9grk5iPu7RViRhlyRlIZF3Co",
+        authDomain: "pdtn-4f7ce.firebaseapp.com",
+        projectId: "pdtn-4f7ce",
+        storageBucket: "pdtn-4f7ce.appspot.com",
+        messagingSenderId: "38496665841",
+        appId: "1:38496665841:web:e4498510fb51bab1862950",
+        measurementId: "G-3ZBXV0C0EP",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const usersCollection = collection(db, "products3");
+
+      let editIndex = null;
+
+      // Function to render the table with sequential numbering
+      async function renderTable() {
+        const tableBody = document.getElementById("tableBody");
+        tableBody.innerHTML = "";
+
+        const q = query(usersCollection, orderBy("createdAt", "asc"));
+        const querySnapshot = await getDocs(q);
+
+        let index = 1;
+        querySnapshot.forEach((doc) => {
+          const userData = doc.data();
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index++}</td>
+            <td>${userData.department}</td>
+            <td>${userData.line}</td>
+            <td>${userData.orderNumber}</td>
+            <td>${userData.productCode}</td>
+            <td>${userData.productName}</td>
+            <td>${userData.productUnit}</td>
+            <td>${userData.productQuantity}</td>
+            <td>${userData.requestedDate}</td>
+            <td>
+              <button onclick="editUser('${doc.id}', '${
+            userData.department
+          }', '${userData.line}', '${userData.orderNumber}', '${
+            userData.productCode
+          }', '${userData.productName}', '${userData.productUnit}' , '${
+            userData.productQuantity
+          }', '${userData.requestedDate}')">แก้ไข</button>
+              <button onclick="deleteUser('${doc.id}')">ลบ</button>
+              <button onclick="showHistory('${doc.id}')">ประวัติ</button>
+            </td>
+          `;
+          tableBody.appendChild(row);
+          setDefaultRecordDate();
+        });
+      }
+
+      // Form submission
+      document
+        .getElementById("userForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const department = document.getElementById("department").value;
+          const line = document.getElementById("line").value;
+          const orderNumber = document.getElementById("orderNumber").value;
+          const productCode = document.getElementById("productCode").value;
+          const productName = document.getElementById("productName").value;
+          const productUnit = document.getElementById("productUnit").value;
+          const productQuantity =
+            document.getElementById("productQuantity").value;
+          const requestedDate = document.getElementById("requestedDate").value;
+          const createdAt = new Date();
+
+          if (editIndex) {
+            const userDoc = doc(db, "products3", editIndex);
+            await updateDoc(userDoc, {
+              department,
+              line,
+              orderNumber,
+              productCode,
+              productName,
+              productUnit,
+              productQuantity,
+              requestedDate,
+            });
+            editIndex = null;
+          } else {
+            await addDoc(usersCollection, {
+              department,
+              line,
+              orderNumber,
+              productCode,
+              productName,
+              productUnit,
+              productQuantity,
+              requestedDate,
+              createdAt,
+            });
+          }
+
+          document.getElementById("userForm").reset();
+          renderTable();
+          document.getElementById("myModal").style.display = "none";
+        });
+
+      window.editUser = (
+        id,
+        department,
+        line,
+        orderNumber,
+        productCode,
+        productName,
+        productUnit,
+        productQuantity,
+        requestedDate
+      ) => {
+        document.getElementById("department").value = department;
+        document.getElementById("line").value = line;
+        document.getElementById("orderNumber").value = orderNumber;
+        document.getElementById("productCode").value = productCode;
+        document.getElementById("productName").value = productName;
+        document.getElementById("productUnit").value = productUnit;
+        document.getElementById("productQuantity").value = productQuantity;
+        document.getElementById("requestedDate").value = requestedDate;
+        editIndex = id;
+        document.getElementById("myModal").style.display = "block";
+        setDefaultRecordDate();
+      };
+
+      window.deleteUser = async (id) => {
+        const userDoc = doc(db, "products3", id);
+        await deleteDoc(userDoc);
+        renderTable();
+      };
+
+      window.showHistory = async (id) => {
+        const userDoc = doc(db, "products3", id);
+        const docSnap = await getDoc(userDoc);
+
+        if (docSnap.exists()) {
+          const userData = docSnap.data();
+          const historyDetails = document.getElementById("historyDetails");
+          historyDetails.innerHTML = `
+            <p><strong>Department:</strong> ${userData.department}</p>
+            <p><strong>Line:</strong> ${userData.line}</p>
+            <p><strong>Order Number:</strong> ${userData.orderNumber}</p>
+            <p><strong>Product Code:</strong> ${userData.productCode}</p>
+            <p><strong>Product Name:</strong> ${userData.productName}</p>
+            <p><strong>Product Unit:</strong> ${userData.productUnit}</p>
+            <p><strong>Product Unit:</strong> ${userData.productQuantity}</p>
+            <p><strong>Product Unit:</strong> ${userData.requestedDate}</p>
+            <p><strong>Created At:</strong> ${userData.createdAt
+              .toDate()
+              .toLocaleString()}</p>
+          `;
+          document.getElementById("historyModal").style.display = "block";
+        }
+      };
+
+      // Event listeners for modal open and close
+      document.getElementById("addRowButton").addEventListener("click", () => {
+        document.getElementById("myModal").style.display = "block";
+      });
+
+      document.getElementById("closeModal").onclick = () => {
+        document.getElementById("myModal").style.display = "none";
+        clearModalFields();
+        resetModalFields();
+      };
+
+      document.getElementById("closeHistoryModal").onclick = () => {
+        document.getElementById("historyModal").style.display = "none";
+      };
+      function clearModalFields() {
+        document.getElementById("productCode").value = "";
+        document.getElementById("productName").value = "";
+        document.getElementById("productQuantity").value = "";
+        document.getElementById("orderNumber").value = "";
+        document.getElementById("productUnit").value = "";
+        document.getElementById("producedQuantity").value = "";
+        document.getElementById("finishDate").value = "";
+        document.getElementById("requestedDate").value = "";
+        document.getElementById("productionDate").value = "";
+        document.getElementById("productionStatus").value = "กำลังดำเนินการ";
+        document.getElementById("recordDate").value = "";
+        document.getElementById("department").value = "ปิดผิว";
+        updateModalLineDropdown();
+        document.getElementById("line").value = "L1";
+        document.getElementById("approve").value = "";
+        document.getElementById("rejectReason").value = "";
+
+        enableAllModalFields(); // Enable all fields when clearing
+        resetModalFields();
+      }
+
+      function enableAllModalFields() {
+        const inputs = document.querySelectorAll(
+          "#myModal input, #myModal select"
+        );
+        inputs.forEach((input) => {
+          input.disabled = false;
+        });
+      }
+      function setDefaultRecordDate() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+        const dd = String(now.getDate()).padStart(2, "0");
+        const hh = String(now.getHours()).padStart(2, "0");
+        const min = String(now.getMinutes()).padStart(2, "0");
+
+        // Format for date (yyyy-mm-dd) and time (hh:mm)
+        const formattedDate = `${yyyy}-${mm}-${dd}`;
+        const formattedTime = `${hh}:${min}`;
+
+        // Set the default value of the date and time fields
+        document.getElementById("recordDate").value = formattedDate;
+        document.getElementById("productionTime").value = formattedTime;
+      }
+
+      function resetModalFields() {
+        const requiredFields = [
+          "productCode",
+          "productName",
+          "productQuantity",
+          "productUnit",
+          "orderNumber",
+          "requestedDate",
+          "productionDate",
+          "department",
+          "line",
+          "productionStatus",
+          "producedQuantity",
+          "finishDate",
+        ];
+
+        requiredFields.forEach((field) => {
+          const fieldElement = document.getElementById(field);
+          fieldElement.style.border = ""; // Reset border when modal is closed
+        });
+      }
+      renderTable();
+    </script>
+  </body>
+</html>

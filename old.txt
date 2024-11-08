@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRUD Firebase with History</title>
+    <style>
+        /* Basic modal styles */
+        .modal {
+            display: none; /* Hide modal by default */
+            position: fixed; /* Fixed positioning */
+            z-index: 1; /* On top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full screen */
+            height: 100%;
+            overflow: auto; /* Scrollable if content exceeds */
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+            justify-content: center; /* Center modal */
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto; /* Margin from top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px; /* Modal size */
+            position: relative;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-content {
+            width: 800px;
+            text-align: center;
+        }
+
+        /* Table styles */
+        table {
+            width: 80%; /* Set table width */
+            margin: 20px auto; /* Center the table */
+            border-collapse: collapse; /* Remove space between table cells */
+            text-align: center; /* Center text */
+        }
+        th, td {
+            border: 1px solid #ddd; /* Add border to table cells */
+            padding: 8px; /* Cell padding */
+        }
+        th {
+            background-color: #f2f2f2; /* Light gray background for header */
+        }
+        tbody tr:hover {
+            background-color: #f1f1f1; /* Change background on hover */
+        }
+    </style>
+</head>
+<body>
+    <!-- Form for user input -->
+    <button id="addDataBtn">Add Data</button>
+
+    <!-- Modal for adding data -->
+ <div id="dataModal" class="modal">
+    <div class="modal-content">
+        <span class="close" id="closeModal">&times;</span>
+        <form id="userForm">
+            <label for="name">Name:</label> <!-- Label for Name -->
+            <input type="text" id="name" placeholder="Enter your name" required />
+            <br /><br /> <!-- Add line breaks for spacing -->
+
+            <label for="age">Age:</label> <!-- Label for Age -->
+            <input type="number" id="age" placeholder="Enter your age" required />
+            <br /><br /> <!-- Add line breaks for spacing -->
+
+            <label for="weight">Weight:</label> <!-- Label for Weight -->
+            <input type="number" id="weight" placeholder="Enter your weight" required />
+            <br /><br /> <!-- Add line breaks for spacing -->
+
+            <label for="sex">Sex:</label> <!-- Label for Sex -->
+            <input type="text" id="sex" placeholder="Enter your sex" required /> <!-- New field for sex -->
+            <br /><br /> <!-- Add line breaks for spacing -->
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</div>
+
+
+    <!-- Table to display user data -->
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Weight</th>
+                <th>Sex</th> <!-- New column for sex -->
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+
+    <!-- Modal for history -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeHistoryModal">&times;</span>
+            <h3>History</h3>
+            <div id="historyDetails"></div>
+        </div>
+    </div>
+
+    <script type="module">
+      // Firebase setup
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        getDocs,
+        deleteDoc,
+        updateDoc,
+        doc,
+        arrayUnion,
+        getDoc,
+        query,
+        orderBy
+      } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+      // Firebase config
+      const firebaseConfig = {
+        apiKey: "AIzaSyD9KJDhRxH9grk5iPu7RViRhlyRlIZF3Co",
+        authDomain: "pdtn-4f7ce.firebaseapp.com",
+        projectId: "pdtn-4f7ce",
+        storageBucket: "pdtn-4f7ce.appspot.com",
+        messagingSenderId: "38496665841",
+        appId: "1:38496665841:web:e4498510fb51bab1862950",
+        measurementId: "G-3ZBXV0C0EP",
+      };
+
+      // Initialize Firebase and Firestore
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const usersCollection = collection(db, "products3");
+      let editIndex = null; // Variable to hold the ID for editing
+
+      // Function to get current date and time
+      function getCurrentDateAndTime() {
+        const now = new Date();
+        const date = now.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+        const time = now.toTimeString().split(" ")[0]; // Format: HH:MM:SS
+        return { date, time };
+      }
+
+      // Function to render the table
+      async function renderTable() {
+        const tableBody = document.getElementById("tableBody");
+        tableBody.innerHTML = ""; // Clear old data in the table
+
+        // Query to get the documents ordered by createdAt
+        const q = query(usersCollection, orderBy("createdAt", "asc")); // Sort by createdAt in ascending order (oldest to newest)
+        const querySnapshot = await getDocs(q);
+        
+        // Populate the table with data
+        querySnapshot.forEach((doc) => {
+          const userData = doc.data();
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${userData.name}</td>
+                    <td>${userData.age}</td>
+                    <td>${userData.weight}</td>
+                    <td>${userData.sex}</td> <!-- New field for sex -->
+                    <td>
+                        <button onclick="editUser('${doc.id}', '${userData.name}', ${userData.age}, ${userData.weight}, '${userData.sex}')">Edit</button>
+                        <button onclick="deleteUser('${doc.id}')">Delete</button>
+                        <button onclick="showHistory('${doc.id}')">History</button>
+                    </td>
+                `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Handle form submission for add/update
+      document.getElementById("userForm").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("name").value;
+          const age = document.getElementById("age").value;
+          const weight = document.getElementById("weight").value;
+          const sex = document.getElementById("sex").value; // Get value for sex
+          const { date, time } = getCurrentDateAndTime();
+
+          if (editIndex) {
+            // Update existing data
+            const userDoc = doc(db, "products3", editIndex);
+            await updateDoc(userDoc, {
+              name,
+              age,
+              weight,
+              sex, // Update the sex field
+              history: arrayUnion({ name, age, weight, sex, date, time }), // Log edit history
+            });
+            editIndex = null;
+          } else {
+            // Add new data
+            await addDoc(usersCollection, {
+              name,
+              age,
+              weight,
+              sex, // Add the sex field
+              createdAt: new Date(), // Add createdAt timestamp
+              history: [{ name, age, weight, sex, date, time }], // Log creation history
+            });
+          }
+
+          document.getElementById("userForm").reset(); // Reset form after submission
+          renderTable(); // Update the table
+          document.getElementById("dataModal").style.display = "none"; // Close modal after submission
+        });
+
+      // Edit user data
+      window.editUser = (id, name, age, weight, sex) => {
+        document.getElementById("name").value = name;
+        document.getElementById("age").value = age;
+        document.getElementById("weight").value = weight;
+        document.getElementById("sex").value = sex; // Set sex for editing
+        editIndex = id; // Store ID for editing
+        document.getElementById("dataModal").style.display = "flex"; // Show modal for editing
+      };
+
+      // Delete user data
+      window.deleteUser = async (id) => {
+        const userDoc = doc(db, "products3", id);
+        await deleteDoc(userDoc); // Delete the document
+        renderTable(); // Refresh the table
+      };
+
+      // Show user history
+      window.showHistory = async (id) => {
+        const userDoc = doc(db, "products3", id);
+        const docSnapshot = await getDoc(userDoc);
+
+        if (docSnapshot.exists()) {
+          const history = docSnapshot.data().history || [];
+          const historyDetails = document.getElementById("historyDetails");
+          historyDetails.innerHTML = ""; // Clear old history details
+
+          // Create a list of history items
+          history.forEach(entry => {
+            const entryEl = document.createElement("div");
+            entryEl.textContent = `Name: ${entry.name}, Age: ${entry.age}, Weight: ${entry.weight}, Sex: ${entry.sex}, Date: ${entry.date}, Time: ${entry.time}`;
+            historyDetails.appendChild(entryEl);
+          });
+
+          document.getElementById("historyModal").style.display = "flex"; // Show history modal
+        }
+      };
+
+      // Close modals
+      document.querySelectorAll(".close").forEach((closeButton) => {
+        closeButton.onclick = function() {
+          this.closest(".modal").style.display = "none"; // Close the modal on close button click
+        };
+      });
+
+      // Load initial data
+      renderTable();
+
+      // Show add data modal
+      document.getElementById("addDataBtn").onclick = function() {
+        document.getElementById("dataModal").style.display = "flex"; // Open modal to add new data
+      };
+    </script>
+</body>
+</html>
